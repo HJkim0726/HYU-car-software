@@ -1,36 +1,64 @@
 #include "color_changer.hpp"
+#include <cmath>
 
-ColorChanger::ColorChanger()
+ColorChanger::ColorChanger() : Node("color_changer_node")
 {
-    publisher_ = this->create_publisher<visualization_msgs::msg::Marker>("visualization_marker", 10);
-    timer_ = this->create_wall_timer(std::chrono::milliseconds(1000), std::bind(&ColorChanger::timer_callback, this));
-    count_ = 0;
+    publisher_ = this->create_publisher<interface::msg::TurtleColor>("turtle_color", 10);
+    subscription_ = this->create_subscription<turtlesim::msg::Pose>(
+        "turtle1/pose", 10, std::bind(&ColorChanger::callback, this, std::placeholders::_1));
+    timer_ = this->create_wall_timer(std::chrono::milliseconds(100), std::bind(&ColorChanger::timer_callback, this));
+    colors_ = {0, 0, 0};
+    parameters_client_ = std::make_shared<rclcpp::AsyncParametersClient>(this, "/turtlesim");
+}
+
+void ColorChanger::callback(turtlesim::msg::Pose::SharedPtr msg)
+{
+    float turtle_theta_deg = msg->theta * 180 / M_PI;
+    
+    if (turtle_theta_deg > 0.0 && turtle_theta_deg <= 90.0)
+    {
+        colors_[0] = 255;
+        colors_[1] = 255;
+        colors_[2] = 255;
+    } else if (turtle_theta_deg > 90.0 && turtle_theta_deg <= 180.0)
+    {
+        colors_[0] = 255;
+        colors_[1] = 0;
+        colors_[2] = 0;
+    } else if (turtle_theta_deg >= -180.0 && turtle_theta_deg <= -90.0)
+    {
+        colors_[0] = 0;
+        colors_[1] = 255;
+        colors_[2] = 0;
+    } else if (turtle_theta_deg > -90.0 && turtle_theta_deg <= 0.0)
+    {
+        colors_[0] = 0;
+        colors_[1] = 0;
+        colors_[2] = 255;
+    }
 }
 
 void ColorChanger::timer_callback()
-{
-    auto msg = visualization_msgs::msg::Marker();
-    msg.header.frame_id = "map";
-    msg.header.stamp = this->now();
-    msg.ns = "basic_shapes";
-    msg.id = 0;
-    msg.type = visualization_msgs::msg::Marker::CUBE;
-    msg.action = visualization_msgs::msg::Marker::ADD;
-    msg.pose.position.x = 0;
-    msg.pose.position.y = 0;
-    msg.pose.position.z = 0;
-    msg.pose.orientation.x = 0.0;
-    msg.pose.orientation.y = 0.0;
-    msg.pose.orientation.z = 0.0;
-    msg.pose.orientation.w = 1.0;
-    msg.scale.x = 1.0;
-    msg.scale.y = 1.0;
-    msg.scale.z = 1.0;
-    msg.color.r = 0.0;
-    msg.color.g = 0.0;
-    msg.color.b = 1.0;
-    msg.color.a = 1.0;
-    msg.lifetime = rclcpp::Duration(1, 0);
+{   
+
+    parameters.clear();
+    parameters.push_back(rclcpp::Parameter("background_r", static_cast<int>(colors_[0])));
+    parameters.push_back(rclcpp::Parameter("background_g", static_cast<int>(colors_[1])));
+    parameters.push_back(rclcpp::Parameter("background_b", static_cast<int>(colors_[2])));
+    parameters_client_->set_parameters(parameters);
+
+    auto msg = interface::msg::TurtleColor();
+    msg.r = colors_[0] / 255.0;
+    msg.g = colors_[1] / 255.0;
+    msg.b = colors_[2] / 255.0;    
     publisher_->publish(msg);
-    count_++;
+}
+
+int main(int argc, char* argv[])
+{
+    rclcpp::init(argc, argv);
+    auto node = std::make_shared<ColorChanger>();
+    rclcpp::spin(node);
+    rclcpp::shutdown();
+    return 0;
 }
