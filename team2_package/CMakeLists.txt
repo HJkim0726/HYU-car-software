@@ -10,6 +10,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(turtlesim REQUIRED)
 find_package(interface REQUIRED)
+find_package(visualization_msgs REQUIRED)
 
 
 include_directories(
@@ -34,8 +35,17 @@ endif()
 add_executable(color_changer src/color_changer.cpp)
 ament_target_dependencies(color_changer rclcpp turtlesim interface)
 
+add_executable(hmi src/hmi.cpp)
+ament_target_dependencies(hmi rclcpp turtlesim interface visualization_msgs)
+
+add_executable(moving_turtle src/moving_turtle.cpp)
+ament_target_dependencies(moving_turtle rclcpp turtlesim geometry_msgs)
+
 install(TARGETS
   color_changer
+  hmi
+  moving_turtle
   DESTINATION lib/${PROJECT_NAME}
 )
+
 ament_package()
