@@ -41,8 +41,10 @@ void MovingTurtle::repeatMovement()
         angularVel(1.0);
     }
     else 
-    {
+    {  
         loopCnt = 0; // 다시 초기화 해서 무한 loop를 돌아버리기
+        linearVel(2.0);
+        angularVel(0.0);
     }
 
     publisher_ ->publish(twist_msg_);
