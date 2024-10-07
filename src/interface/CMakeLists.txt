@@ -35,4 +35,9 @@ rosidl_generate_interfaces(
   DEPENDENCIES geometry_msgs std_msgs
 )
 
+install(
+  DIRECTORY msg
+  DESTINATION share/${PROJECT_NAME}
+)
+
 ament_package()
