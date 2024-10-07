@@ -5,7 +5,7 @@ HMI::HMI() : Node("hmi")
     marker_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("marker_pub",10);
     turtle_color_sub_ = this->create_subscription<interface::msg::TurtleColor>("turtle_color", 10, std::bind(&HMI::turtle_color_callback, this, std::placeholders::_1));
     turtle_pose_sub_ = this->create_subscription<turtlesim::msg::Pose>("turtle1/pose", 10, std::bind(&HMI::turtle_pose_callback, this, std::placeholders::_1));
-    timer_ = this->create_wall_timer(std::chrono::milliseconds(static_cast<float>(1000.0/60.0)), std::bind(&HMI::timer_callback, this));
+    timer_ = this->create_wall_timer(std::chrono::duration<double, std::milli>(1000.0 / 60.0), std::bind(&HMI::timer_callback, this));
     marker = visualization_msgs::msg::Marker();
 }
 
